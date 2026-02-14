@@ -228,3 +228,150 @@ function playMusic() {
 </script>
 </body>
 </html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Slow Heart with Music</title>
+<style>
+    body {
+        margin: 0;
+        background: black;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+    }
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+    }
+    button {
+        position: relative;
+        z-index: 1;
+        padding: 12px 25px;
+        background: crimson;
+        border: none;
+        color: white;
+        font-size: 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow: 0 0 20px crimson;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="heart"></canvas>
+
+<button id="playBtn">Play Music 🎵</button>
+
+<audio id="bgMusic" loop>
+    <!-- Вставь сюда свой mp3 файл -->
+    <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const canvas = document.getElementById("heart");
+const ctx = canvas.getContext("2d");
+
+let width, height;
+
+// Адаптивный canvas
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    width = canvas.width;
+    height = canvas.height;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Частицы
+const particles = [];
+const total = 2000;
+
+// Формула сердца
+function heart(t) {
+    return {
+        x: 16 * Math.pow(Math.sin(t), 3),
+        y: -(13 * Math.cos(t)
+            - 5 * Math.cos(2 * t)
+            - 2 * Math.cos(3 * t)
+            - Math.cos(4 * t))
+    };
+}
+
+// Создание частиц по всему экрану
+for (let i = 0; i < total; i++) {
+    let t = Math.random() * Math.PI * 2;
+    let pos = heart(t);
+
+    particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        targetX: width / 2 + pos.x * 25,
+        targetY: height / 2 + pos.y * 25,
+        speed: Math.random() * 0.005 + 0.002,
+        trail: []
+    });
+}
+
+// Анимация
+function animate() {
+
+    // Эффект линии/следа
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255,0,0,0.5)";
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "red";
+
+    particles.forEach(p => {
+        let prevX = p.x;
+        let prevY = p.y;
+
+        // Движение к центру
+        p.x += (p.targetX - p.x) * p.speed;
+        p.y += (p.targetY - p.y) * p.speed;
+
+        // Линия от старой позиции к новой
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        // Фиксируем цель
+        if (Math.abs(p.x - p.targetX) < 0.1 &&
+            Math.abs(p.y - p.targetY) < 0.1) {
+            p.x = p.targetX;
+            p.y = p.targetY;
+        }
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+// 🎵 Кнопка для музыки
+const btn = document.getElementById("playBtn");
+const music = document.getElementById("bgMusic");
+
+btn.addEventListener("click", () => {
+    music.play().catch(err => console.log(err));
+});
+</script>
+
+</body>
+</html>
