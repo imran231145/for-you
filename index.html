@@ -113,8 +113,8 @@ window.onload = init;
 
 
 
-
-<!-- <!DOCTYPE html>
+<!-- 
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -236,7 +236,7 @@ function playMusic() {
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Slow Heart with Music</title>
+<title>Shining Heart</title>
 <style>
     body {
         margin: 0;
@@ -248,15 +248,16 @@ function playMusic() {
         height: 100vh;
         flex-direction: column;
     }
+
     canvas {
         position: absolute;
         top: 0;
         left: 0;
-        z-index: 0;
     }
+
     button {
         position: relative;
-        z-index: 1;
+        z-index: 2;
         padding: 12px 25px;
         background: crimson;
         border: none;
@@ -271,45 +272,40 @@ function playMusic() {
 <body>
 
 <canvas id="heart"></canvas>
-
-<button id="playBtn">Play Music 🎵</button>
+<button onclick="playMusic()">Play Music 🎵</button>
 
 <audio id="bgMusic" loop>
-    <source src="Arctic Monkeys - I Wanna Be Yours.mp3" type="audio/mpeg">
+    <!-- Вставь сюда свою музыку -->
+    <!-- <source src="I-Wanna-Be-Yours.mp3" type="audio/mpeg"> -->
 </audio>
 
 <script>
 const canvas = document.getElementById("heart");
 const ctx = canvas.getContext("2d");
 
-let width, height;
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
 
-// Адаптивный canvas
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    width = canvas.width;
-    height = canvas.height;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+window.addEventListener("resize", () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+});
 
-// Частицы
 const particles = [];
 const total = 2000;
 
-// Формула сердца
+// функция для позиции сердца
 function heart(t) {
     return {
         x: 16 * Math.pow(Math.sin(t), 3),
-        y: -(13 * Math.cos(t)
-            - 5 * Math.cos(2 * t)
-            - 2 * Math.cos(3 * t)
-            - Math.cos(4 * t))
+        y: -(13 * Math.cos(t) 
+            - 5 * Math.cos(2*t) 
+            - 2 * Math.cos(3*t) 
+            - Math.cos(4*t))
     };
 }
 
-// Создание частиц по всему экрану
+// создаём частицы в случайных местах с целью центра
 for (let i = 0; i < total; i++) {
     let t = Math.random() * Math.PI * 2;
     let pos = heart(t);
@@ -317,45 +313,56 @@ for (let i = 0; i < total; i++) {
     particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        targetX: width / 2 + pos.x * 25,
-        targetY: height / 2 + pos.y * 25,
-        speed: Math.random() * 0.005 + 0.002,
-        trail: []
+        targetX: width/2 + pos.x*30,
+        targetY: height/2 + pos.y*30,
+        speed: 0.001 + Math.random()*0.002,
+        size: Math.random() * 1.5 + 0.5
     });
 }
 
-// Анимация
-function animate() {
+// для лучей из центра
+const rays = [];
+for(let i=0; i<50; i++){
+    rays.push({
+        angle: Math.random()*Math.PI*2,
+        length: Math.random()*50 + 50,
+        speed: Math.random()*0.002 + 0.001
+    });
+}
 
-    // Эффект линии/следа
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
+function animate() {
+    // Следы частиц — очень плавно исчезают
+    ctx.fillStyle = "rgba(0,0,0,0.02)";
     ctx.fillRect(0, 0, width, height);
 
+    // Рисуем лучи
+    ctx.strokeStyle = "rgba(255,0,0,0.2)";
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255,0,0,0.5)";
+    rays.forEach(r => {
+        const cx = width/2;
+        const cy = height/2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        const lx = cx + Math.cos(r.angle)*r.length;
+        const ly = cy + Math.sin(r.angle)*r.length;
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+
+        r.angle += r.speed;
+    });
+
+    // Частицы
+    ctx.fillStyle = "red";
     ctx.shadowBlur = 15;
     ctx.shadowColor = "red";
 
     particles.forEach(p => {
-        let prevX = p.x;
-        let prevY = p.y;
-
-        // Движение к центру
         p.x += (p.targetX - p.x) * p.speed;
         p.y += (p.targetY - p.y) * p.speed;
 
-        // Линия от старой позиции к новой
         ctx.beginPath();
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-
-        // Фиксируем цель
-        if (Math.abs(p.x - p.targetX) < 0.1 &&
-            Math.abs(p.y - p.targetY) < 0.1) {
-            p.x = p.targetX;
-            p.y = p.targetY;
-        }
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
     });
 
     requestAnimationFrame(animate);
@@ -363,13 +370,10 @@ function animate() {
 
 animate();
 
-// 🎵 Кнопка для музыки
-const btn = document.getElementById("playBtn");
-const music = document.getElementById("bgMusic");
-
-btn.addEventListener("click", () => {
-    music.play().catch(err => console.log(err));
-});
+// Музыка
+function playMusic() {
+    document.getElementById("bgMusic").play();
+}
 </script>
 
 </body>
